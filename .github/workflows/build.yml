@@ -1,0 +1,36 @@
+name: SonarQube Analyze
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify Python
+        shell: powershell
+        run: |
+          python --version
+          where.exe python
+          pip --version
+
+      - name: Install dependencies
+        shell: powershell
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run SonarQube scan
+        shell: powershell
+        run: |
+          & "C:\sonar-scanner\bin\sonar-scanner.bat" `
+            -D"sonar.host.url=${{ secrets.SONAR_HOST_URL }}" `
+            -D"sonar.token=${{ secrets.SONAR_TOKEN }}"
