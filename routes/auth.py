@@ -18,8 +18,12 @@ def login():
         next_url = '/dashboard'
 
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('username').strip() #get() para obtener el valor de username desde el formulario evitando errores si no se envia, y strip() elimina espacios en blanco al inicio y al final
+        password = request.form.get('password','') #get() para obtener el valor de password desde el formulario evitamdo errores si no se envia
+        if  not username or not password: #validamos que ambos campos sean obligatorios
+            flash("Username and password are required.","danger") #mostrar mensaje indicando la ausencia de un campo
+            return render_template('auth/login.html', next_url=next_url) #se renderiza el login manteniendo redireccion segura
+        
         conn = get_users_connection()
         #user = conn.execute("SELECT * FROM users WHERE username = '"+ username +"' AND password = '"+hash_password(password)+"'").fetchone()
         """Se modifica para realizar consulta parametrizada.
