@@ -1,12 +1,22 @@
 from db import get_users_connection, hash_password
 from flask import request, redirect, render_template, session, flash
 from server import app
+from urllib.parse import urlparse #urlparse para analizar URLs 
+
+
+#Función para validar que la URL de redirección es segura, solo permitiendo rutas internar e.g '/dashboard'
+def is_safe_redirect(target):
+    parsed = urlparse(target) #parsear la url, separar esquema, dominio, ruta, etc..
+    return not parsed.netloc and target.startswith('/') #parsed.netloc vacío significa que NO hay dominio, y con target.startswith('/') garantiza que la ruta comienza en la raíz del sitio.  Si ambas condiciones se cumplen, la redirección es segura.
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'username' in session:
         return redirect('/dashboard')
     next_url = request.args.get('next', '/dashboard')
+    if not is_safe_redirect(next_url): #si la URL no es segura (contiene un dominio externo), se forza la redireccion a ruta interna
+        next_url = '/dashboard'
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
