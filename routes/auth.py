@@ -33,6 +33,7 @@ def login():
         conn.close()
         
         if user:
+            session.clear() #Borra cualquier sesión previa, incluida una que pudiera haber sido fijada por un atacante
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
