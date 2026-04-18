@@ -45,7 +45,7 @@ def list_companies():
     
     search = request.args.get('q', '')
     if search:
-        companies = conn.execute("SELECT * FROM companies WHERE name LIKE '%" + search + "%'").fetchall()
+        companies = conn.execute("SELECT * FROM companies WHERE name LIKE ?", ('%' + search + '%',)).fetchall()
     else:
         companies = conn.execute("SELECT * FROM companies").fetchall()
 
