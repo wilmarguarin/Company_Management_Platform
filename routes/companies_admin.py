@@ -16,10 +16,11 @@ def admin_add_company():
     if session.get('role') != 'admin':
         return render_template('errors/403.html'), 403
     if request.method == 'POST':
-        company_name = request.form['company_name']
-        owner = request.form['owner']
+        company_name = request.form.get('company_name', '').strip()
+        description = request.form.get('description', '').strip()
+        owner = request.form.get('owner', '').strip()
         conn = get_data_connection()
-        conn.execute("INSERT INTO companies (name, owner) VALUES ('"+ company_name+"', '"+owner+"')")
+        conn.execute("INSERT INTO companies (name, description, owner) VALUES (?, ?, ?)",(company_name, description, owner))
         conn.commit()
         conn.close()
         flash("Company created successfully.", "success")

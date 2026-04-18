@@ -97,11 +97,15 @@ def register_company():
     if session.get('role') != 'admin':
         return render_template('errors/403.html'), 403
     if request.method == 'POST':
-        company_name = request.form['company_name']
-        description = request.form['description']
-        owner = request.form.get('owner', session.get('username'))
+        company_name = request.form.get('company_name', '').strip()
+        description = request.form.get('description', '').strip()
+        owner = request.form.get('owner', session.get('username', '')).strip()
+        if not company_name or not description or not owner:
+            flash("Company name, description and owner are required.", "danger")
+            return render_template('companies/register_company.html')
+
         conn = get_data_connection()
-        conn.execute("INSERT INTO companies (name, description, owner) VALUES ("+company_name+", '"+description+"', '"+owner+"')")
+        conn.execute("INSERT INTO companies (name, description, owner) VALUES (?, ?, ?)",(company_name, description, owner))
         conn.commit()
         conn.close()
         flash("Company registered successfully.", "success")
