@@ -22,10 +22,14 @@ def admin_users():
 def add_user():
     if session.get('role') != 'admin':
         return render_template('errors/403.html'), 403
-    username = request.form['username']
-    password = request.form['password']
-    role = request.form['role']
-    company_id = request.form.get('company_id') if role == 'owner' else None
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    role = request.form.get('role', '').strip()
+    company_id = request.form.get('company_id').strip() if role == 'owner' else None
+  
+    if not username or not password or not role:
+        flash("Username, password and role are required.", "danger")
+        return redirect('/admin/users')
 
     conn = get_users_connection()
     if company_id:
