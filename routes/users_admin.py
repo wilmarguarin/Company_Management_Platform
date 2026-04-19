@@ -31,7 +31,7 @@ def add_user():
         return redirect('/admin/users')
     allowed_roles = {'admin', 'user', 'owner'}
     if role not in allowed_roles:
-        flash("Invalid role selected.", "danger")
+        flash("Invalid role selected", "danger")
         return redirect('/admin/users')
     if role == 'owner':
         if not company_id or not company_id.isdigit():
