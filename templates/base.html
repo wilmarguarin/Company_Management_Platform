@@ -64,11 +64,12 @@
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form action="/logout" method="post" class="m-0">
-                                     <button type="submit" class="dropdown-item">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="dropdown-item">
                                         <i class="bi bi-box-arrow-right"></i> Logout
-                                     </button>
-                                     </form>
-                                    </li>
+                                    </button>
+                                </form>
+                            </li>
                         </ul>
                     </li>
                 </ul>
