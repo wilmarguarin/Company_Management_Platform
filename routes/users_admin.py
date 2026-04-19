@@ -2,10 +2,23 @@ from flask import request, redirect, render_template, session, flash
 from server import app
 from db import get_users_connection, get_data_connection, hash_password
 
+def current_user_is_admin():
+    username = session.get('username')
+    if not username:
+        return False
+
+    conn = get_users_connection()
+    user = conn.execute(
+        "SELECT role FROM users WHERE username = ?",
+        (username,)
+    ).fetchone()
+    conn.close()
+
+    return user is not None and user['role'] == 'admin'
 
 @app.route('/admin/users')
 def admin_users():
-    if session.get('role') != 'admin':
+    if not current_user_is_admin():
         return render_template('errors/403.html'), 403
     conn_u = get_users_connection()
     users = conn_u.execute("SELECT * FROM users").fetchall()
@@ -20,7 +33,7 @@ def admin_users():
 
 @app.route('/admin/users/add', methods=['POST'])
 def add_user():
-    if session.get('role') != 'admin':
+    if not current_user_is_admin():
         return render_template('errors/403.html'), 403
     username = request.form.get('username', '').strip()
     password = request.form.get('password', '').strip()
@@ -64,7 +77,7 @@ def add_user():
 
 @app.route('/admin/users/edit', methods=['POST'])
 def edit_user():
-    if session.get('role') != 'admin':
+    if not current_user_is_admin():
         return render_template('errors/403.html'), 403
     username = request.form['username']
     new_role = request.form['role']
@@ -83,7 +96,7 @@ def edit_user():
 
 @app.route('/admin/users/delete', methods=['POST'])
 def delete_user():
-    if session.get('role') != 'admin':
+    if not current_user_is_admin():
         return render_template('errors/403.html'), 403
     username = request.form['username']
     conn = get_users_connection()
