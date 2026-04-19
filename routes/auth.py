@@ -3,8 +3,12 @@ from flask import request, redirect, render_template, session, flash
 from server import app
 from urllib.parse import urlparse
 
+# Constantes de rutas
+DASHBOARD_URL = '/dashboard'
+LOGIN_URL = '/login'
 
-# Función para validar que la URL de redirección es segura, solo permitiendo rutas internas e.g '/dashboard'
+
+# Función para validar que la URL de redirección es segura
 def is_safe_redirect(target):
     if not target:
         return False
@@ -15,11 +19,11 @@ def is_safe_redirect(target):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'username' in session:
-        return redirect('/dashboard')
+        return redirect(DASHBOARD_URL)
 
-    next_url = request.values.get('next', '/dashboard')
+    next_url = request.values.get('next', DASHBOARD_URL)
     if not is_safe_redirect(next_url):
-        next_url = '/dashboard'
+        next_url = DASHBOARD_URL
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -55,4 +59,4 @@ def login():
 def logout():
     session.clear()
     flash("You have been logged out.", "info")
-    return redirect('/login')
+    return redirect(LOGIN_URL)
