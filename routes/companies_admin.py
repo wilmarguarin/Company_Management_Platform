@@ -6,7 +6,6 @@ from db import get_data_connection
 def admin_list_companies():
     if session.get('role') != 'admin':
         return render_template('errors/403.html'), 403
-
     conn = get_data_connection()
     companies = conn.execute("SELECT * FROM companies").fetchall()
     conn.close()
@@ -16,17 +15,23 @@ def admin_list_companies():
 def admin_add_company():
     if session.get('role') != 'admin':
         return render_template('errors/403.html'), 403
-
     if request.method == 'POST':
         company_name = request.form.get('company_name', '').strip()
         description = request.form.get('description', '').strip()
         owner = request.form.get('owner', '').strip()
 
-        if not company_name or not description or not owner:
+        if not company_name or not owner:
             flash("All fields are required.", "danger")
             return redirect('/admin/companies')
 
         conn = get_data_connection()
+        
+        existing_company = conn.execute("SELECT id FROM companies WHERE name = ?", (company_name,)).fetchone()
+        if existing_company:
+            conn.close()
+            flash("Company already exists. Please try with a different name.", "danger")
+            return redirect('/admin/companies') 
+               
         conn.execute(
             "INSERT INTO companies (name, description, owner) VALUES (?, ?, ?)",
             (company_name, description, owner)

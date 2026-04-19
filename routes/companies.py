@@ -105,6 +105,12 @@ def register_company():
             return render_template('companies/register_company.html')
 
         conn = get_data_connection()
+        
+        existing_company = conn.execute("SELECT id FROM companies WHERE name = ?", (company_name,) ).fetchone()
+        if existing_company:
+            conn.close()
+            flash("Company already exists. Please try with a different name.", "danger")
+            return render_template('companies/register_company.html')
         conn.execute("INSERT INTO companies (name, description, owner) VALUES (?, ?, ?)",(company_name, description, owner))
         conn.commit()
         conn.close()
@@ -112,13 +118,12 @@ def register_company():
         return redirect('/companies')
     return render_template('companies/register_company.html')
 
-
 @app.route('/companies/<int:company_id>/edit', methods=['GET', 'POST'])
 def edit_company(company_id):
     if 'username' not in session:
         return redirect('/')
     conn = get_data_connection()
-    company = conn.execute("SELECT * FROM companies WHERE id = "+ str(company_id)).fetchone()
+    company = conn.execute("SELECT * FROM companies WHERE id = ?", (company_id,)).fetchone()
     if not company:
         conn.close()
         return render_template('errors/404.html'), 404
@@ -126,9 +131,19 @@ def edit_company(company_id):
         conn.close()
         return render_template('errors/403.html'), 403
     if request.method == 'POST':
-        new_name = request.form['company_name']
-        new_description = request.form['description']
-        conn.execute("UPDATE companies SET name = ?, description = ? WHERE id = ?", (new_name, new_description, company_id))
+        new_name = request.form.get('company_name', '').strip()
+        new_description = request.form.get('description', '').strip()
+        if not new_name or not new_description:
+            conn.close()
+            flash("Company name and description are required.", "danger")
+            return redirect(f'/companies/{company_id}/edit')
+        existing_company = conn.execute(
+            "SELECT id FROM companies WHERE name = ? AND id != ?", (new_name, company_id)).fetchone()
+        if existing_company:
+            conn.close()
+            flash("Company already exists. Please try with a different name.", "danger")
+            return redirect(f'/companies/{company_id}/edit')
+        conn.execute("UPDATE companies SET name = ?, description = ? WHERE id = ?",(new_name, new_description, company_id))
         conn.commit()
         conn.close()
         flash("Company updated successfully.", "success")
