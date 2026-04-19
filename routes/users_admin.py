@@ -6,6 +6,7 @@ import sqlite3
 # Constantes
 ERROR_403_TEMPLATE = 'errors/403.html'
 ADMIN_USERS_URL = '/admin/users'
+SELECT_USER_BY_USERNAME = "SELECT username FROM users WHERE username = ?"
 
 
 def current_user_is_admin():
@@ -87,7 +88,7 @@ def add_user():
     conn = get_users_connection()
     try:
         existing_user = conn.execute(
-            "SELECT username FROM users WHERE username = ?",
+            SELECT_USER_BY_USERNAME,
             (username,)
         ).fetchone()
 
@@ -141,7 +142,7 @@ def edit_user():
     conn = get_users_connection()
     try:
         existing_user = conn.execute(
-            "SELECT username FROM users WHERE username = ?",
+            SELECT_USER_BY_USERNAME,
             (username,)
         ).fetchone()
 
@@ -200,7 +201,7 @@ def delete_user():
     conn = get_users_connection()
     try:
         existing_user = conn.execute(
-            "SELECT username FROM users WHERE username = ?",
+            SELECT_USER_BY_USERNAME,
             (username,)
         ).fetchone()
 
