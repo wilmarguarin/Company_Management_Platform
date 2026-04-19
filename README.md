@@ -8,6 +8,7 @@
 
 ```bash
 pip install -r requirements.txt
+pip install flask-wtf
 python main.py
 ```
 
