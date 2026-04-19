@@ -79,15 +79,43 @@ def add_user():
 def edit_user():
     if not current_user_is_admin():
         return render_template('errors/403.html'), 403
-    username = request.form['username']
-    new_role = request.form['role']
-    company_id = request.form.get('company_id') if new_role == 'owner' else None
-
+    username = request.form.get('username', '').strip()
+    new_role = request.form.get('role', '').strip()
+    company_id = request.form.get('company_id', '').strip() if new_role == 'owner' else None
+    allowed_roles = {'admin', 'user', 'owner'}
+    if not username or not new_role:
+        flash("Username and role are required.", "danger")
+        return redirect('/admin/users')
+    if new_role not in allowed_roles:
+        flash("Invalid role selected.", "danger")
+        return redirect('/admin/users')
     conn = get_users_connection()
-    if company_id:
-        conn.execute("UPDATE users SET role = ?, company_id = ? WHERE username = ?", (new_role, company_id, username))
+    existing_user = conn.execute(
+        "SELECT username FROM users WHERE username = ?", (username,)).fetchone()
+    if not existing_user:
+        conn.close()
+        flash("User not found.", "danger")
+        return redirect('/admin/users')
+    if new_role == 'owner':
+        if not company_id or not company_id.isdigit():
+            conn.close()
+            flash("A valid company identifier is required for owner role.", "danger")
+            return redirect('/admin/users')
+        company_id = int(company_id)
+        conn_d = get_data_connection()
+        company_exists = conn_d.execute("SELECT id FROM companies WHERE id = ?",(company_id,)).fetchone()
+        conn_d.close()
+        if not company_exists:
+            conn.close()
+            flash("Selected company does not exist.", "danger")
+            return redirect('/admin/users')
+
+        conn.execute(
+            "UPDATE users SET role = ?, company_id = ? WHERE username = ?",(new_role, company_id, username))
     else:
-        conn.execute("UPDATE users SET role = ?, company_id = NULL WHERE username = ?", (new_role, username))
+        conn.execute(
+            "UPDATE users SET role = ?, company_id = NULL WHERE username = ?",(new_role, username))
+
     conn.commit()
     conn.close()
     flash("User updated.", "success")
@@ -98,9 +126,18 @@ def edit_user():
 def delete_user():
     if not current_user_is_admin():
         return render_template('errors/403.html'), 403
-    username = request.form['username']
+    username = request.form.get('username', '').strip()
+    if not username:
+        flash("Username is required.", "danger")
+        return redirect('/admin/users')
     conn = get_users_connection()
-    conn.execute("DELETE FROM users WHERE username = ?", (username,))
+    existing_user = conn.execute("SELECT username FROM users WHERE username = ?", (username,)).fetchone()
+    if not existing_user:
+        conn.close()
+        flash("User not found.", "danger")
+        return redirect('/admin/users')
+    conn.execute(
+        "DELETE FROM users WHERE username = ?",(username,))
     conn.commit()
     conn.close()
     flash("User deleted.", "warning")
