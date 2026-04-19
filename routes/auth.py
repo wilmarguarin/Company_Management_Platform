@@ -7,6 +7,9 @@ from urllib.parse import urlparse
 DASHBOARD_URL = '/dashboard'
 LOGIN_URL = '/login'
 
+# Constantes de templates
+LOGIN_TEMPLATE = 'auth/login.html'
+
 
 # Función para validar que la URL de redirección es segura
 def is_safe_redirect(target):
@@ -31,7 +34,7 @@ def login():
 
         if not username or not password:
             flash("Username and password are required.", "danger")
-            return render_template('auth/login.html', next_url=next_url)
+            return render_template(LOGIN_TEMPLATE, next_url=next_url)
 
         conn = get_users_connection()
         user = conn.execute(
@@ -50,9 +53,9 @@ def login():
             return redirect(next_url)
 
         flash("Invalid username or password", "danger")
-        return render_template('auth/login.html', next_url=next_url)
+        return render_template(LOGIN_TEMPLATE, next_url=next_url)
 
-    return render_template('auth/login.html', next_url=next_url)
+    return render_template(LOGIN_TEMPLATE, next_url=next_url)
 
 
 @app.route('/logout', methods=['POST'])
