@@ -6,6 +6,7 @@ from db import get_data_connection, get_users_connection
 LOGIN_URL = '/login'
 HOME_URL = '/'
 COMPANIES_URL = '/companies'
+REGISTER_COMPANY_TEMPLATE = 'companies/register_company.html'
 
 
 @app.route('/')
@@ -151,7 +152,7 @@ def register_company():
 
         if not company_name or not owner:
             flash("Company name and owner are required.", "danger")
-            return render_template('companies/register_company.html')
+            return render_template(REGISTER_COMPANY_TEMPLATE)
 
         conn = get_data_connection()
 
@@ -163,7 +164,7 @@ def register_company():
         if existing_company:
             conn.close()
             flash("Company already exists. Please try with a different name.", "danger")
-            return render_template('companies/register_company.html')
+            return render_template(REGISTER_COMPANY_TEMPLATE)
 
         conn.execute(
             "INSERT INTO companies (name, description, owner) VALUES (?, ?, ?)",
@@ -175,7 +176,7 @@ def register_company():
         flash("Company registered successfully.", "success")
         return redirect(COMPANIES_URL)
 
-    return render_template('companies/register_company.html')
+    return render_template(REGISTER_COMPANY_TEMPLATE)
 
 
 @app.route('/companies/<int:company_id>/edit', methods=['GET', 'POST'])
