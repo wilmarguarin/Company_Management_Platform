@@ -25,25 +25,42 @@ def add_user():
     username = request.form.get('username', '').strip()
     password = request.form.get('password', '').strip()
     role = request.form.get('role', '').strip()
-    company_id = request.form.get('company_id').strip() if role == 'owner' else None
-  
+    company_id = request.form.get('company_id', '').strip() if role == 'owner' else None
     if not username or not password or not role:
         flash("Username, password and role are required.", "danger")
         return redirect('/admin/users')
-
-    conn = get_users_connection()
-    if company_id:
-        conn.execute(
-        "INSERT INTO users (username, password, role, company_id) VALUES (?, ?, ?, ?)",
-        (username, hash_password(password), role, company_id)
-    )
-    else:
-        conn.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", (username, hash_password(password), role))
-        conn.commit()
-        conn.close()
-        flash("User created successfully.", "success")
+    allowed_roles = {'admin', 'user', 'owner'}
+    if role not in allowed_roles:
+        flash("Invalid role selected.", "danger")
         return redirect('/admin/users')
-
+    if role == 'owner':
+        if not company_id or not company_id.isdigit():
+            flash("A valid company identifier is required for owner role.", "danger")
+            return redirect('/admin/users')
+        company_id = int(company_id)
+        conn_d = get_data_connection()
+        company_exists = conn_d.execute(
+            "SELECT id FROM companies WHERE id = ?",
+            (company_id,)
+        ).fetchone()
+        conn_d.close()
+        if not company_exists:
+            flash("Selected company does not exist.", "danger")
+            return redirect('/admin/users')
+    conn = get_users_connection()
+    if company_id is not None:
+        conn.execute(
+            "INSERT INTO users (username, password, role, company_id) VALUES (?, ?, ?, ?)",
+            (username, hash_password(password), role, company_id)
+        )
+    else:
+        conn.execute(
+            "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+            (username, hash_password(password), role))
+    conn.commit()
+    conn.close()
+    flash("User created successfully.", "success")
+    return redirect('/admin/users')
 
 @app.route('/admin/users/edit', methods=['POST'])
 def edit_user():
